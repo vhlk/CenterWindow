@@ -24,12 +24,24 @@ CUR_WINDOW_GEOM_W=$(cut -d "x" -f1 <<< $CUR_WINDOW_GEOM)
 
 echo "Window size: " $CUR_WINDOW_GEOM_W "x" $CUR_WINDOW_GEOM_H
 
-# get current screen info
-WIN_DESKTOP_DIMS=$(xdpyinfo | grep dimensions | grep -o '[0-9x]*' | head -n1)
-WIN_DESTOP_H=$(cut -d "x" -f2 <<< $WIN_DESKTOP_DIMS)
-WIN_DESTOP_W=$(cut -d "x" -f1 <<< $WIN_DESKTOP_DIMS)
+WINDOW_FRAME_EXTENTS=$(xprop _NET_FRAME_EXTENTS -id $CUR_WINDOW_PID)
+if [[ $WINDOW_FRAME_EXTENTS =~ "not found" ]]
+then
+  echo "_NET_FRAME_EXTENTS not found (this is ok)."
+else
+  FRAME_EXTENTS=($(echo $WINDOW_FRAME_EXTENTS | cut -d '=' -f2 | tr ',' ' '))
 
-echo "Screen size: " $WIN_DESTOP_W "x" $WIN_DESTOP_H
+  LEFT=${FRAME_EXTENTS[0]}
+  RIGHT=${FRAME_EXTENTS[1]}
+  TOP=${FRAME_EXTENTS[2]}
+  BOTTOM=${FRAME_EXTENTS[3]}
+
+
+  CUR_WINDOW_GEOM_H=$(( CUR_WINDOW_GEOM_H + TOP + BOTTOM ))
+  CUR_WINDOW_GEOM_W=$(( CUR_WINDOW_GEOM_W + LEFT + RIGHT ))
+  
+  echo "_NET_FRAME_EXTENTS found (Left: $LEFT, Top: $TOP, Right: $RIGHT, Bottom: $BOTTOM)." "Actual window size: $CUR_WINDOW_GEOM_W x $CUR_WINDOW_GEOM_H"
+fi
 
 # get current working screen info
 WIN_DESKTOP_W_DIMS=$(xprop -root _NET_WORKAREA | grep -Eo '[0-9]+')
@@ -42,33 +54,9 @@ WIN_DESTOP_W_H=$(echo $WIN_DESKTOP_W_DIMS | cut -d " " -f4)
 
 echo "Working screen size: " $WIN_DESTOP_W_W "x" $WIN_DESTOP_W_H "[Top left:" "("$WIN_DESKTOP_W_TOP_LEFT_X"," $WIN_DESKTOP_W_TOP_LEFT_Y")]"
 
-# corrections
-HORIZONTAL_CORRECTION=0
-if (( WIN_DESTOP_W != WIN_DESTOP_W_W ))
-then
-   # if there is a bar at the left
-   HORIZONTAL_CORRECTION=$(( HORIZONTAL_CORRECTION + (WIN_DESKTOP_W_TOP_LEFT_X / 2) ))
-
-   # if there is a bar at the right
-   HORIZONTAL_CORRECTION=$(( HORIZONTAL_CORRECTION - (WIN_DESTOP_W - WIN_DESTOP_W_W - WIN_DESKTOP_W_TOP_LEFT_X)/2 ))
-fi
-
-VERTICAL_CORRECTION=0
-if (( WIN_DESTOP_H != WIN_DESTOP_W_H ))
-then
-   # if there is a bar at the top
-   VERTICAL_CORRECTION=$(( VERTICAL_CORRECTION + (WIN_DESKTOP_W_TOP_LEFT_Y / 2) ))
-
-   # if there is a bar at the bottom
-   VERTICAL_CORRECTION=$(( VERTICAL_CORRECTION - (WIN_DESTOP_H - WIN_DESTOP_W_H - WIN_DESKTOP_W_TOP_LEFT_Y)/2 ))
-fi
-
-echo "Horizontal correction:" $HORIZONTAL_CORRECTION
-echo "Vertical correction:" $VERTICAL_CORRECTION
-
 # get middle of the screen
-MIDDLE_X=$(( ((WIN_DESTOP_W - CUR_WINDOW_GEOM_W)/2) + HORIZONTAL_CORRECTION ))
-MIDDLE_Y=$(( ((WIN_DESTOP_H - CUR_WINDOW_GEOM_H)/2) + VERTICAL_CORRECTION ))
+MIDDLE_X=$(( ((WIN_DESTOP_W_W - CUR_WINDOW_GEOM_W)/2) + WIN_DESKTOP_W_TOP_LEFT_X ))
+MIDDLE_Y=$(( ((WIN_DESTOP_W_H - CUR_WINDOW_GEOM_H)/2) + WIN_DESKTOP_W_TOP_LEFT_Y ))
 
 echo "Middle coords:" "("$MIDDLE_X"," $MIDDLE_Y")"
 
