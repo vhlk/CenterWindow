@@ -12,7 +12,7 @@ command_available () {
 # check dependencies
 
 command_available xdotool
-command_available xdpyinfo
+command_available xprop
 
 # get window infos
 
