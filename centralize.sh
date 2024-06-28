@@ -14,6 +14,51 @@ command_available () {
 command_available xdotool
 command_available xprop
 
+# command line options
+print_help() {
+  echo "CenterWindow! Just a small bash script for centering window in X11."
+  echo "Usage: ./centralize.sh [-h] [-v]"
+}
+
+ONLY_HORIZONTAL=false
+ONLY_VERTICAL=false
+
+while getopts ":hv" opt
+do
+  case $opt in
+   h)
+    echo "Horizontal enabled"
+    ONLY_HORIZONTAL=true
+    ;;
+   v)
+    echo "Vertical enabled"
+    ONLY_VERTICAL=true
+    ;;
+   ?)
+    print_help
+    echo
+    echo "Wrong option: ${OPTARG}"
+    ;;
+  esac
+done
+
+
+CENTER_H=true
+CENTER_V=true
+
+if [ "$ONLY_HORIZONTAL" != "$ONLY_VERTICAL" ]
+then
+ if [ "$ONLY_HORIZONTAL" = true ]
+ then
+  CENTER_V=false
+ fi
+ 
+ if [ "$ONLY_VERTICAL" = true ]
+ then
+  CENTER_H=false
+ fi
+fi
+
 # get window infos
 
 CUR_WINDOW_PID=$(xdotool getactivewindow)
@@ -23,6 +68,12 @@ CUR_WINDOW_GEOM_H=$(cut -d "x" -f2 <<< $CUR_WINDOW_GEOM)
 CUR_WINDOW_GEOM_W=$(cut -d "x" -f1 <<< $CUR_WINDOW_GEOM)
 
 echo "Window size: " $CUR_WINDOW_GEOM_W "x" $CUR_WINDOW_GEOM_H
+
+CUR_WINDOW_POS=$(xdotool getwindowgeometry $(xdotool getactivewindow) | grep Position | grep -Eo "[0-9]+,[0-9]+")
+CUR_WINDOW_POS_X=$(echo $CUR_WINDOW_POS | cut -d "," -f1)
+CUR_WINDOW_POS_Y=$(echo $CUR_WINDOW_POS | cut -d "," -f2)
+
+echo "Window pos: ($CUR_WINDOW_POS_X, $CUR_WINDOW_GEOM_H)"
 
 WINDOW_FRAME_EXTENTS=$(xprop _NET_FRAME_EXTENTS -id $CUR_WINDOW_PID)
 if [[ $WINDOW_FRAME_EXTENTS =~ "not found" ]]
@@ -60,4 +111,18 @@ MIDDLE_Y=$(( ((WIN_DESTOP_W_H - CUR_WINDOW_GEOM_H)/2) + WIN_DESKTOP_W_TOP_LEFT_Y
 
 echo "Middle coords:" "("$MIDDLE_X"," $MIDDLE_Y")"
 
-xdotool getactivewindow windowmove "$MIDDLE_X" "$MIDDLE_Y"
+COORDS=($CUR_WINDOW_POS_X $CUR_WINDOW_POS_Y)
+
+if [ "$CENTER_H" = true ]
+then
+  COORDS[0]=$MIDDLE_X
+fi
+
+if [ "$CENTER_V" = true ]
+then
+  COORDS[1]=$MIDDLE_Y
+fi
+
+echo "Setting coords: (${COORDS[@]})"
+
+xdotool getactivewindow windowmove "${COORDS[0]}" "${COORDS[1]}"
