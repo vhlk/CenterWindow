@@ -38,6 +38,8 @@ do
     print_help
     echo
     echo "Wrong option: ${OPTARG}"
+    echo "Quitting..."
+   	exit -1
     ;;
   esac
 done
