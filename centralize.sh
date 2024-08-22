@@ -13,12 +13,16 @@ command_available () {
 
 command_available xdotool
 command_available xprop
+command_available xwininfo
+command_available wmctrl
 
 # command line options
 print_help() {
   echo "CenterWindow! Just a small bash script for centering window in X11."
   echo "Usage: ./centralize.sh [-h] [-v]"
 }
+
+# tools that can help: xdotool, wmctrl, xwininfo, xprop
 
 ONLY_HORIZONTAL=false
 ONLY_VERTICAL=false
@@ -61,70 +65,15 @@ then
  fi
 fi
 
+# get list of monitors
+bash aux/check_monitors.sh
+
 # get window infos
-
-CUR_WINDOW_PID=$(xdotool getactivewindow)
-
-CUR_WINDOW_GEOM=$(xdotool getwindowgeometry $CUR_WINDOW_PID | grep -o '[0-9]*x[0-9]*')
-CUR_WINDOW_GEOM_H=$(cut -d "x" -f2 <<< $CUR_WINDOW_GEOM)
-CUR_WINDOW_GEOM_W=$(cut -d "x" -f1 <<< $CUR_WINDOW_GEOM)
-
-echo "Window size: " $CUR_WINDOW_GEOM_W "x" $CUR_WINDOW_GEOM_H
-
-CUR_WINDOW_POS=$(xdotool getwindowgeometry $(xdotool getactivewindow) | grep Position | grep -Eo "[0-9]+,[0-9]+")
-CUR_WINDOW_POS_X=$(echo $CUR_WINDOW_POS | cut -d "," -f1)
-CUR_WINDOW_POS_Y=$(echo $CUR_WINDOW_POS | cut -d "," -f2)
-
-echo "Window pos: ($CUR_WINDOW_POS_X, $CUR_WINDOW_GEOM_H)"
-
-WINDOW_FRAME_EXTENTS=$(xprop _NET_FRAME_EXTENTS -id $CUR_WINDOW_PID)
-if [[ $WINDOW_FRAME_EXTENTS =~ "not found" ]]
-then
-  echo "_NET_FRAME_EXTENTS not found (this is ok)."
-else
-  FRAME_EXTENTS=($(echo $WINDOW_FRAME_EXTENTS | cut -d '=' -f2 | tr ',' ' '))
-
-  LEFT=${FRAME_EXTENTS[0]}
-  RIGHT=${FRAME_EXTENTS[1]}
-  TOP=${FRAME_EXTENTS[2]}
-  BOTTOM=${FRAME_EXTENTS[3]}
-
-
-  CUR_WINDOW_GEOM_H=$(( CUR_WINDOW_GEOM_H + TOP + BOTTOM ))
-  CUR_WINDOW_GEOM_W=$(( CUR_WINDOW_GEOM_W + LEFT + RIGHT ))
-  
-  echo "_NET_FRAME_EXTENTS found (Left: $LEFT, Top: $TOP, Right: $RIGHT, Bottom: $BOTTOM)." "Actual window size: $CUR_WINDOW_GEOM_W x $CUR_WINDOW_GEOM_H"
-fi
+. ./aux/get_window_stats.sh # CUR_WINDOW_PID, CUR_WINDOW_GEOM_H, CUR_WINDOW_GEOM_W, CUR_WINDOW_POS_X, CUR_WINDOW_POS_Y
 
 # get current working screen info
-WIN_DESKTOP_W_DIMS=$(xprop -root _NET_WORKAREA | grep -Eo '[0-9]+')
-
-WIN_DESKTOP_W_TOP_LEFT_X=$(echo $WIN_DESKTOP_W_DIMS | cut -d " " -f1)
-WIN_DESKTOP_W_TOP_LEFT_Y=$(echo $WIN_DESKTOP_W_DIMS | cut -d " " -f2)
-
-WIN_DESTOP_W_W=$(echo $WIN_DESKTOP_W_DIMS | cut -d " " -f3)
-WIN_DESTOP_W_H=$(echo $WIN_DESKTOP_W_DIMS | cut -d " " -f4)
-
-echo "Working screen size: " $WIN_DESTOP_W_W "x" $WIN_DESTOP_W_H "[Top left:" "("$WIN_DESKTOP_W_TOP_LEFT_X"," $WIN_DESKTOP_W_TOP_LEFT_Y")]"
+. ./aux/get_working_area.sh # DESTOP_WA_W, DESTOP_WA_H, DESKTOP_WA_TOP_LEFT_X, DESKTOP_WA_TOP_LEFT_Y
+. ./aux/get_curr_screen_size.sh # CUR_WINDOW_PID, CURR_SCREEN_GEOM_W, CURR_SCREEN_GEOM_H
 
 # get middle of the screen
-MIDDLE_X=$(( ((WIN_DESTOP_W_W - CUR_WINDOW_GEOM_W)/2) + WIN_DESKTOP_W_TOP_LEFT_X ))
-MIDDLE_Y=$(( ((WIN_DESTOP_W_H - CUR_WINDOW_GEOM_H)/2) + WIN_DESKTOP_W_TOP_LEFT_Y ))
-
-echo "Middle coords:" "("$MIDDLE_X"," $MIDDLE_Y")"
-
-COORDS=($CUR_WINDOW_POS_X $CUR_WINDOW_POS_Y)
-
-if [ "$CENTER_H" = true ]
-then
-  COORDS[0]=$MIDDLE_X
-fi
-
-if [ "$CENTER_V" = true ]
-then
-  COORDS[1]=$MIDDLE_Y
-fi
-
-echo "Setting coords: (${COORDS[@]})"
-
-xdotool getactivewindow windowmove "${COORDS[0]}" "${COORDS[1]}"
+. ./aux/set_middle_screen_coords.sh
