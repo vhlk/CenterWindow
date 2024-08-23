@@ -65,15 +65,14 @@ then
  fi
 fi
 
-# get list of monitors
-bash aux/check_monitors.sh
+echo "Center vertically = $CENTER_V. Center horizontally: $CENTER_H."
 
 # get window infos
-. ./aux/get_window_stats.sh # CUR_WINDOW_PID, CUR_WINDOW_GEOM_H, CUR_WINDOW_GEOM_W, CUR_WINDOW_POS_X, CUR_WINDOW_POS_Y
+. ./aux/get_window_stats.sh # CUR_WINDOW_PID, CUR_WINDOW_GEOM_H, CUR_WINDOW_GEOM_W, CUR_WINDOW_POS_X, CUR_WINDOW_POS_Y, 
+#                               FRAME_EXTENTS_LEFT, FRAME_EXTENTS_RIGHT, FRAME_EXTENTS_TOP, FRAME_EXTENTS_BOTTOM
 
 # get current working screen info
-. ./aux/get_working_area.sh # DESTOP_WA_W, DESTOP_WA_H, DESKTOP_WA_TOP_LEFT_X, DESKTOP_WA_TOP_LEFT_Y
-. ./aux/get_curr_screen_size.sh # CUR_WINDOW_PID, CURR_SCREEN_GEOM_W, CURR_SCREEN_GEOM_H
+. ./aux/get_curr_screen_stats.sh # CUR_WINDOW_PID, CURR_SCREEN_GEOM_W, CURR_SCREEN_GEOM_H, CURR_SCREEN_POS_X, CURR_SCREEN_POS_Y
 
 # get middle of the screen
 . ./aux/set_middle_screen_coords.sh
