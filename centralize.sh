@@ -67,12 +67,14 @@ fi
 
 echo "Center vertically = $CENTER_V. Center horizontally: $CENTER_H."
 
+CURR_FILE_LOCATION=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 # get window infos
-. ./aux/get_window_stats.sh # CUR_WINDOW_PID, CUR_WINDOW_GEOM_H, CUR_WINDOW_GEOM_W, CUR_WINDOW_POS_X, CUR_WINDOW_POS_Y, 
-#                               FRAME_EXTENTS_LEFT, FRAME_EXTENTS_RIGHT, FRAME_EXTENTS_TOP, FRAME_EXTENTS_BOTTOM
+. "$CURR_FILE_LOCATION/aux/get_window_stats.sh" # CUR_WINDOW_PID, CUR_WINDOW_GEOM_H, CUR_WINDOW_GEOM_W, CUR_WINDOW_POS_X, CUR_WINDOW_POS_Y, 
+#                                                   FRAME_EXTENTS_LEFT, FRAME_EXTENTS_RIGHT, FRAME_EXTENTS_TOP, FRAME_EXTENTS_BOTTOM
 
 # get current working screen info
-. ./aux/get_curr_screen_stats.sh # CUR_WINDOW_PID, CURR_SCREEN_GEOM_W, CURR_SCREEN_GEOM_H, CURR_SCREEN_POS_X, CURR_SCREEN_POS_Y
+. "$CURR_FILE_LOCATION/aux/get_curr_screen_stats.sh" # CUR_WINDOW_PID, CURR_SCREEN_GEOM_W, CURR_SCREEN_GEOM_H, CURR_SCREEN_POS_X, CURR_SCREEN_POS_Y
 
 # get middle of the screen
-. ./aux/set_middle_screen_coords.sh
+. "$CURR_FILE_LOCATION/aux/set_middle_screen_coords.sh"
