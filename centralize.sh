@@ -69,6 +69,9 @@ echo "Center vertically = $CENTER_V. Center horizontally: $CENTER_H."
 
 CURR_FILE_LOCATION=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
+# so that we can run the other scripts
+(cd "$CURR_FILE_LOCATION/aux"; chmod +x *)
+
 # get window infos
 . "$CURR_FILE_LOCATION/aux/get_window_stats.sh" # CUR_WINDOW_PID, CUR_WINDOW_GEOM_H, CUR_WINDOW_GEOM_W, CUR_WINDOW_POS_X, CUR_WINDOW_POS_Y, 
 #                                                   FRAME_EXTENTS_LEFT, FRAME_EXTENTS_RIGHT, FRAME_EXTENTS_TOP, FRAME_EXTENTS_BOTTOM
